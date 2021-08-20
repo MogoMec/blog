@@ -1,0 +1,17 @@
+{
+  "name": "blogwithvuepress",
+  "version": "1.0.0",
+  "description": "blog powerd by Vuepress",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs:dev": "vuepress dev docs --temp .temp",
+    "docs:build": "vuepress build docs",
+    "deploy": "bash deploy.sh"
+  },
+  "author": "Mogo",
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.8.2"
+  }
+}
