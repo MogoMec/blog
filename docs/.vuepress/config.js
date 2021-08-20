@@ -1,5 +1,5 @@
 module.exports = {
-  base: "/website/",
+  base: "/blog/",
   title: "Mogo的小站",
   description: "Mogo的小站",
   logo: "/logo.jpg",
