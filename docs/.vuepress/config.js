@@ -1,4 +1,5 @@
 module.exports = {
+  theme: "reco",
   base: "/blog/",
   title: "Mogo的小站",
   description: "Mogo的小站",
@@ -12,25 +13,36 @@ module.exports = {
       }
     ],
     ["meta", { name: "keywords", content: "Mogo,前端,博客" }],
-    ["meta", { name: "author", content: "Mogo" }]
+    ["meta", { name: "author", content: "Mogo" }],
+    [
+      "meta",
+      {
+        name: "viewport",
+        content: "width=device-width,initial-scale=1,user-scalable=no"
+      }
+    ]
   ],
-  // 这是部署到github相关的配置
   markdown: {
     lineNumbers: false // 代码块显示行号
   },
   themeConfig: {
+    sidebar: {
+      "/docs/note/": ["write_in_front", "", "FrontEnd_engineering"]
+    },
+    subSidebar: "auto",
+    type: "blog",
+    mode: "light",
+    author: "Mogo", //版权信息，与昵称为同一数据
+    startYear: "2020", //开始年份
     logo: "/logo.jpg",
     nav: [
-      { text: "主页", link: "/" },
-      { text: "博客", link: "/blog/" },
-      { text: "笔记", link: "/note/" },
+      { text: "主页", link: "/", icon: "reco-home" },
+      { text: "笔记", link: "/docs/note/", icon: "reco-document" },
       {
         text: "GitHub",
-        link: "https://github.com/MogoMec"
+        link: "https://github.com/MogoMec",
+        icon: "reco-github"
       }
-    ],
-    sidebar: {
-      "/note/": [["", "vue"], "vue学习笔记"]
-    }
+    ]
   }
 };
