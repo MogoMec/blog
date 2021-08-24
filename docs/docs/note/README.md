@@ -688,7 +688,215 @@ date: 2020-05-29
 
 - Modules
 
-## SPA
+## 原理
 
-- 单页面应用程序
-- 路由
+### 双向数据绑定
+
+- vue的双向数据绑定是依靠**数据劫持**（检测数据变化）和**发布-订阅模式**的结合。
+
+#### 数据劫持
+
+数据劫持有两种办法：
+
+- [Object.defineProperty(obj,prop,descriptor)](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)（vue2）
+
+  - 使用descriptor中的setter和getter函数捕获prop的访问与更改
+
+    ```js
+    Object.defineProperty(car, 'price', {
+      enumerable: true,
+      configurable: true,
+      get(){
+        //收集依赖
+        console.log('price属性被读取了')
+        return val
+      },
+      set(newVal){
+        //通知依赖更新
+        console.log('price属性被修改了')
+        val = newVal
+      }
+    })
+    ```
+
+- [Proxy](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy)（ES6，vue3）
+
+#### 发布-订阅模式
+
+- 依赖：即绑定了某个数据项的视图，使用`Watcher`实例代表依赖
+
+- 监听器Observer，用来递归遍历data，劫持每一个数据
+
+  ```js
+  // 源码位置：src/core/observer/index.js
+  
+  /**
+   * Observer类会通过递归的方式把一个对象的所有属性都转化成可观测对象
+   */
+  export class Observer {
+    constructor (value) {
+      this.value = value
+      // 给value新增一个__ob__属性，值为该value的Observer实例
+      // 相当于为value打上标记，表示它已经被转化成响应式了，避免重复操作
+      def(value,'__ob__',this)
+      if (Array.isArray(value)) {
+        // 当value为数组时的逻辑
+        // ...
+      } else {
+        this.walk(value)
+      }
+    }
+  
+    walk (obj: Object) {
+      const keys = Object.keys(obj)
+      for (let i = 0; i < keys.length; i++) {
+        defineReactive(obj, keys[i])
+      }
+    }
+  }
+  /**
+   * 使一个对象转化成可观测对象
+   * @param { Object } obj 对象
+   * @param { String } key 对象的key
+   * @param { Any } val 对象的某个key的值
+   */
+  function defineReactive (obj,key,val) {
+    // 如果只传了obj和key，那么val = obj[key]
+    if (arguments.length === 2) {
+      val = obj[key]
+    }
+    if(typeof val === 'object'){
+        new Observer(val)
+    }
+    Object.defineProperty(obj, key, {
+      enumerable: true,
+      configurable: true,
+      get(){
+        dep.depend()    // 在getter中收集依赖
+        return val;
+      },
+      set(newVal){
+        if(val === newVal){
+            return
+        }
+        val = newVal;
+        dep.notify()   // 在setter中通知依赖更新
+      }
+    })
+  }
+  ```
+
+  
+
+- 消息中心Dependence（Dep），用来收集订阅者，即依赖收集，并在数据变化时，通知订阅者
+
+  - 维护一个Watcher数组，Watcher实例在初始化时通过调用get（访问相关属性）来加入数组（依赖收集）
+
+  ```js
+  // 源码位置：src/core/observer/dep.js
+  export default class Dep {
+    constructor () {
+      this.subs = []
+    }
+  
+    addSub (sub) {
+      this.subs.push(sub)
+    }
+    // 删除一个依赖
+    removeSub (sub) {
+      remove(this.subs, sub)
+    }
+    // 添加一个依赖
+    depend () {
+      if (window.target) {//全局变量：window.taget用于存放Watcher实例，会在Watcher实例初始化时被赋值和释放
+        this.addSub(window.target)
+      }
+    }
+    // 通知所有依赖更新
+    notify () {
+      const subs = this.subs.slice()
+      for (let i = 0, l = subs.length; i < l; i++) {
+        subs[i].update()
+      }
+    }
+  }
+  
+  /**
+   * Remove an item from an array
+   */
+  export function remove (arr, item) {
+    if (arr.length) {
+      const index = arr.indexOf(item)
+      if (index > -1) {
+        return arr.splice(index, 1)
+      }
+    }
+  }
+  ```
+
+- 订阅者Watcher，代表依赖，接收数据变化，并进行最后的更新视图操作
+
+  ```js
+  export default class Watcher {
+    constructor (vm,expOrFn,cb) {
+      this.vm = vm;
+      this.cb = cb;
+      this.getter = parsePath(expOrFn)
+      this.value = this.get()
+    }
+    get () {
+      window.target = this;//全局变量window.target
+      const vm = this.vm
+      let value = this.getter.call(vm, vm)
+      window.target = undefined;
+      return value
+    }
+    update () {
+      const oldValue = this.value
+      this.value = this.get()
+      this.cb.call(this.vm, this.value, oldValue)
+    }
+  }
+  
+  /**
+   * Parse simple path.
+   * 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
+   * 例如：
+   * data = {a:{b:{c:2}}}
+   * parsePath('a.b.c')(data)  // 2
+   */
+  const bailRE = /[^\w.$]/
+  export function parsePath (path) {
+    if (bailRE.test(path)) {
+      return
+    }
+    const segments = path.split('.')
+    return function (obj) {
+      for (let i = 0; i < segments.length; i++) {
+        if (!obj) return
+        obj = obj[segments[i]]
+      }
+      return obj
+    }
+  }
+  ```
+
+- 依赖收集流程：
+
+  - 实例化`Watcher`实例时执行构造函数，其中调用了`this.get()`方法
+  - `this.get()`方法中
+    -  `window.target = this`将自身赋给全局变量`window.target`，方便`Dep`添加
+    - `let value = this.getter.call(vm, vm)`获取被依赖的数据，触发`getter`，调用`dep.depend()`收集依赖，通过全局变量`window.target`传值
+    - `window.target = undefined`，释放全局变量
+
+#### vue2数据劫持的不足与解决
+
+- 对象属性的添加或删除无法被检测，Vue 不能动态添加**根级别**的响应式属性。但是，可以使用 `Vue.set(object, key, value)` 方法向**嵌套对象**添加响应式属性。
+
+- `Object.defineProperty`不支持数组，因此Vue重写了数组的很多方，使得这些方法也能触发视图更新，都仍然不能检测以下变动:
+
+  - 当你利用索引直接设置一个项时，例如：`vm.items[indexOfItem] = newValue`
+  - 当你修改数组的长度时，例如：`vm.items.length = newLength`
+
+  
+
