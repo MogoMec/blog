@@ -1,5 +1,11 @@
 ---
 title: 更好的JavaScript异步编程方案——Promise的那些事
+categories:
+-JavaScript
+tags:
+-Promise
+-ES6
+-异步
 ---
 
 ## 异步操作的需求
@@ -10,11 +16,15 @@ JavaScript的异步是指JS引擎不必等待异步操作的结束，而是可�
 
 JavaScript实现异步编程的方案在不断发展，从最基础的回调函数到ES6引入的Promise方案，本文将回顾不同的JavaScript异步编程实现方式。本文包括以下内容：
 
+::: tip
+
 - 回调函数
 - 事件监听
 - 发布-订阅模式
 - Promise
 - async/await
+
+:::
 
 ## 回调函数
 
@@ -106,9 +116,10 @@ Promise是一个有三种状态的对象，分别为待定（pending）、兑现
 
 上面的函数返回一个`Promise`实例，`Promise`的构造函数接受一个函数作为参数，该函数有两个函数形参，`resolve()`和`reject()`，这两个函数用于控制`Promsie`状态的转换，`resolve()`会将状态切换为兑现（fulfilled），`reject()`会将状态切换为拒绝（rejected）。对异步操作结果的处理则通过`Promsie`的实例方法来实现，最常见的就是`.then()`方法，它接受两个函数作为参数，两个函数分别会在Promsie状态变为兑现（fulfilled）和拒绝（rejected）时执行。这里有一个更加便于理解的说法：你可以将`resolve()`和`reject()`视为两条状态转变路径的回调函数，而回调函数的具体实现是在`.then() .catch()`中完成的，在初始化`Promsie`实例时不必关心回调函数的具体实现，实现解耦。
 
-::: tips
+::: tip
 
 `catch()`方法是一个语法糖，等价于`Promise.prototype.then(null, onRejected)`
 
 :::
 
+为了解决回调地狱，`.then`方法会返回一个新的`Promise`实例，如此一来，你就可以通过`Promise`的链式调用来代替回调地狱的写法了。
