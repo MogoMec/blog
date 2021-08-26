@@ -1,11 +1,9 @@
 ---
 title: JavaScript的运行机制——到底什么是Event Loop?
-categories:
--JavaScript
-tags:
--Event Loop
--ES6
--Promise
+categories: JavaScript
+tags: 
+- EventLoop 
+- Promise
 ---
 
 在看面经的时候发现经常会有读代码给出打印结果的题目，就像下面这段代码：

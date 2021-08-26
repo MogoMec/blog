@@ -1,11 +1,10 @@
 ---
-title: 更好的JavaScript异步编程方案——Promise的那些事
-categories:
--JavaScript
-tags:
--Promise
--ES6
--异步
+title: 更好的JavaScript异步编程方案——不只是Promise
+categories: JavaScript
+tags: 
+- Promise 
+- ES6 
+- 异步
 ---
 
 ## 异步操作的需求
@@ -52,7 +51,19 @@ callback
 
 对于f1函数，输出语句`console.log('Timer start')`是同步执行的，随后的定时器则是异步执行的，此时JS引擎会继续执行下方代码`console.log('script end');`，直至异步操作完成，再执行异步回调函数。
 
-异步回调简单直接，便于理解，然而当我们有串联异步操作（下一步异步操作依赖上一个异步操作）的需求，无可避免的，我们需要将回调函数进行层层嵌套，这会造成代码可维护性的大大降低（各部分高度耦合），也就是俗称的回调地狱。
+异步回调简单直接，便于理解，然而当我们有串联异步操作（下一步异步操作依赖上一个异步操作）的需求，无可避免的，我们需要将回调函数进行层层嵌套，这会造成代码可维护性的大大降低（各部分高度耦合），也就是俗称的回调地狱。抽象出来就像这样：
+
+```js
+asyncFunc1(opt, (...args1) => {
+    asyncFunc2(opt, (...args2) => {
+        asyncFunc3(opt, (...args3) => {
+            asyncFunc4(opt, (...args4) => {
+                // some operation
+            });
+        });
+    });
+});
+```
 
 另外，回调函数不仅仅只能应用于异步操作，很多同步操作中也有回调概念，例如JavaScript中数组的各种常用高阶函数（`forEach`、`some`、`map`等）。
 
@@ -97,7 +108,7 @@ function ajaxUsingPromise(method, url, data) {
             if (xhr.status === 200 && xhr.readyState === 4) {
                 resolve(xhr.responseText);
             } else {
-                reject(xhr.statusText);
+                reject(xhr.status);
             }
         }
         xhr.send(data);
@@ -112,9 +123,9 @@ ajaxUsingPromise('someUrl')
 })
 ```
 
-Promise是一个有三种状态的对象，分别为待定（pending）、兑现（fulfilled）、拒绝（rejected）。
+`Promise`是一个有三种状态的对象，分别为待定（pending）、兑现（fulfilled）、拒绝（rejected）。
 
-上面的函数返回一个`Promise`实例，`Promise`的构造函数接受一个函数作为参数，该函数有两个函数形参，`resolve()`和`reject()`，这两个函数用于控制`Promsie`状态的转换，`resolve()`会将状态切换为兑现（fulfilled），`reject()`会将状态切换为拒绝（rejected）。对异步操作结果的处理则通过`Promsie`的实例方法来实现，最常见的就是`.then()`方法，它接受两个函数作为参数，两个函数分别会在Promsie状态变为兑现（fulfilled）和拒绝（rejected）时执行。这里有一个更加便于理解的说法：你可以将`resolve()`和`reject()`视为两条状态转变路径的回调函数，而回调函数的具体实现是在`.then() .catch()`中完成的，在初始化`Promsie`实例时不必关心回调函数的具体实现，实现解耦。
+上面的函数返回一个`Promise`实例，`Promise`的构造函数接受一个函数作为参数，该函数有两个函数形参，`resolve()`和`reject()`，这两个函数用于控制`Promsie`状态的转换，`resolve()`会将状态切换为兑现（fulfilled），`reject()`会将状态切换为拒绝（rejected）。对异步操作结果的处理则通过`Promsie`的实例方法来实现，最常见的就是`.then()`方法，它接受两个函数作为参数，两个函数分别会在`Promsie`状态变为兑现（fulfilled）和拒绝（rejected）时执行。这里有一个更加便于理解的说法：你可以将`resolve()`和`reject()`视为两条状态转变路径的回调函数，而回调函数的具体实现是在`.then() .catch()`中完成的，在初始化`Promsie`实例时不必关心回调函数的具体实现，实现解耦。
 
 ::: tip
 
@@ -123,3 +134,52 @@ Promise是一个有三种状态的对象，分别为待定（pending）、兑现
 :::
 
 为了解决回调地狱，`.then`方法会返回一个新的`Promise`实例，如此一来，你就可以通过`Promise`的链式调用来代替回调地狱的写法了。
+
+```js
+asyncFunc1(opt)
+    .then(args1=> asyncFunc2(args1))
+    .then(args2=> asyncFunc3(args2))
+    .then(args3=> asyncFunc4(args3))
+```
+
+除了链式调用，`Promise`类还提供了两个将多个`Promise`实例组合使用的静态方法：
+
+- [`Promise.all()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)：一组`Promise`全部解决后（回调也执行完毕）再解决方法本身返回`Promise`。
+- [`Promise.race()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/race)：返回一组`Promise`中最先解决或拒绝的实例的镜像。
+
+## async/await
+
+`async/await`是ES8新增的异步函数语法关键字。它简化了`Promise`的使用。前者使得函数能够使得`Promise`在函数中隐式地使用，后者用于控制异步函数内的运行启停以及`Promise`对象的值解析。
+
+`async`关键字用于声明异步函数，对`Promise`的隐式使用体现在：
+
+- 异步函数**一定会返回一个`Promise`实例**，它会通过[`Promise.resolve()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/resolve)包装原返回值（隐式返回）。
+- 和`await`搭配使用，在碰到`Promise`对象时等待其状态落定然后进行值解析，等待时阻塞异步函数内的后续代码。
+
+`await`关键字只能在`async`修饰的函数中使用。其具体作用如下：
+
+- 
+
+下面的代码演示`async/await`配合之前封装的`ajax`使用：
+
+```js
+async function getData(){
+    var data = await ajaxUsingPromise(someurl)
+    window.data = data
+    return data
+}
+    console.log(getData())
+    console.log('script')
+
+//输出：
+Promise{<pending>}
+script
+返回值
+```
+
+`getData()`被`async`修饰为异步函数，`await`阻塞异步函数体内后续语句的执行，等待`ajax`请求返回值，并解析值，此时data得到的值就是返回值（非`Promise`对象）。
+
+
+
+
+
