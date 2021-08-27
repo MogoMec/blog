@@ -156,9 +156,10 @@ asyncFunc1(opt)
 - 异步函数**一定会返回一个`Promise`实例**，它会通过[`Promise.resolve()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/resolve)包装原返回值（隐式返回）。
 - 和`await`搭配使用，在碰到`Promise`对象时等待其状态落定然后进行值解析，等待时阻塞异步函数内的后续代码。
 
-`await`关键字只能在`async`修饰的函数中使用。其具体作用如下：
+`await`关键字只能在`async`修饰的函数中使用。`await`才是异步函数的灵魂（功能驱动），`async`更多扮演修饰符的作用（规范）。`await`用法和一元操作符（如`！`）一样，其具体作用如下：
 
-- 
+- 暂定执行异步函数中后续的代码，让出JavaScript线程
+- 对后续数据进行值解析，完成后再恢复异步函数的执行（向微任务队列添加任务）
 
 下面的代码演示`async/await`配合之前封装的`ajax`使用：
 
@@ -177,7 +178,14 @@ script
 返回值
 ```
 
-`getData()`被`async`修饰为异步函数，`await`阻塞异步函数体内后续语句的执行，等待`ajax`请求返回值，并解析值，此时data得到的值就是返回值（非`Promise`对象）。
+`getData()`被`async`修饰为异步函数，`await`阻塞异步函数体内后续语句的执行，等待`ajax`请求返回值，并解析值，此时data得到的值就是返回值（非`Promise`对象）。可以看出，异步函数通过`await`的使用有了异步特征，但其总体代码依然是同步求值。
+
+需要注意的：
+
+- `Promise`进入`rejected`状态的错误无法被异步函数捕捉
+- 异步函数原返回值是`Promise`时，无论原`Promise`在什么状态，都会返回一个处于`pending`状态的`Promise`
+
+`async/await`在实际使用中产生的输出实际上比想象中复杂微妙。
 
 
 
