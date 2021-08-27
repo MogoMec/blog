@@ -185,7 +185,7 @@ script
 - `Promise`进入`rejected`状态的错误无法被异步函数捕捉
 - 异步函数原返回值是`Promise`时，无论原`Promise`在什么状态，都会返回一个处于`pending`状态的`Promise`
 
-`async/await`在实际使用中产生的输出实际上比想象中复杂微妙。
+`async/await`产生的输出实际上比想象中[复杂微妙](https://mogomec.github.io/blog/blogs/JS/async.html#async-它返回了啥)。
 
 
 
