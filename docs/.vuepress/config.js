@@ -27,7 +27,13 @@ module.exports = {
   },
   themeConfig: {
     sidebar: {
-      "/docs/note/": ["write_in_front", "", "FrontEnd_engineering"]
+      "/docs/note/": [
+        "write_in_front",
+        "",
+        "JavaScript_note",
+        "browser",
+        "FrontEnd_engineering"
+      ]
     },
     subSidebar: "auto",
     type: "blog",
