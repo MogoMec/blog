@@ -2,7 +2,7 @@
 title: JavaScript的运行机制——到底什么是Event Loop?
 categories: JavaScript
 tags: 
-- EventLoop 
+- Event Loop 
 - Promise
 ---
 

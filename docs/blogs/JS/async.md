@@ -4,6 +4,7 @@ categories: JavaScript
 tags: 
 - Promise 
 - 异步
+- Event Loop
 ---
 
 有一天，我遇到这样一道读代码写输出的题目：
