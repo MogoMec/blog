@@ -1,7 +1,7 @@
 ---
 title: JavaScript笔记
 categories: JavaScript
-tags： 
+tags: 
 - notes
 ---
 

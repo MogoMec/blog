@@ -1,7 +1,7 @@
 ---
 title: 浏览器相关知识
 categories: JavaScript
-tags： 
+tags: 
 - notes
 - 性能优化
 ---
