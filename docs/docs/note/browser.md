@@ -9,6 +9,7 @@ tags:
 ## HTTP缓存机制
 
 - 缓存即服务器资源的客户端本地副本。
+- 缓存一般只适用于不更新服务端数据的操作，一般`GET`请求（通常为查找操作）不改变服务端数据，所以可以使用缓存，而`POST`请求往往用于操作数据增删改，不会使用缓存。
 - 优点：
   - 提高网页打开速度，优化用户体验
   - 减少服务器压力
@@ -171,7 +172,53 @@ ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000') // 指定源
 
 - `h5`新增api[`window.postMessage`](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/postMessage)，跨文档通信，实现多窗口数据通信，简单直接。
 
+## 浏览器存储
 
 
+
+## 用户身份认证
+
+### cookie
+
+- 概述：服务器提供的一种用于维护会话状态信息的**数据**，通过服务器发送到浏览器，浏览器**保存在本地**，当下一次有同源的请求时，将保存的 cookie 值添加到请求头部，发送给服务端。这可以用来实现记录用户登录状态等功能。
+
+- 服务器一般使用`Set-Cookie` 的响应头部来配置 cookie 信息，cookie存放的数据不能大于4Kb。
+
+- cookie属性
+
+  - `expires`：cookie的过期时间
+  - `domain`：只能访问该域名时才会带上cookie
+  - `path`：表明只有访问该路径时才会带上cookie，与`domain`配合使用
+  - `httpOnly`：为`true`时，浏览器不能通过代码读取cookie，即不能被浏览器上的js脚本访问
+  - `secure`: 为`true`时，只有发送HTTPS请求时才会带上cookie
+  - `SameSite`：用于防止CSRF攻击，默认为`lax`，不发送第三方 Cookie，但是导航到目标网址的 Get 请求除外。详参：[Cookie 的 SameSite 属性](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
+
+- 简易cookie操作封装
+
+  ```js
+  const cookieUtil = {
+      setItem(name, value, days) {
+          let date = new Date()
+          date.setDate(date.getDate() + days)
+          document.cookie = `${name}=${value};expires=${date}`
+      },
+  
+      getItem(name) {
+          let arr = document.cookie.split(';')
+          let ret 
+          arr.forEach(item => {
+              let tempArr = item.split('=')
+              if (tempArr[0] === name) {
+                  ret = tempArr[1]
+              }
+          })
+          return ret
+      },
+  
+      removeItem(name) {
+          this.setItem(name, null, -1)
+      }
+  }
+  ```
 
 

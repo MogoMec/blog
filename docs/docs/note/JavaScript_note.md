@@ -58,7 +58,55 @@ typeof function() {} === 'function'
 
 
 
+## 数组
+
+
+
+### 判断数组
+
+```javascript
+var arr = []
+arr instanceof Arra
+Array.prototype.isPrototypeOf(arr)
+arr.constructor === Array
+Object.prototype.toString.call(arr) === "[object Array]"
+Array.isArray(arr)
+```
+
+### 数组扁平化
+
+```js
+var arr = [1, 2, [3, [4, 5]]]
+//flat(Infinity)
+arr.flat(Infinity)
+
+//JSON.stringify + 正则分割 + JSON.parse
+function flat(arr) {
+    let str = JSON.stringify(arr).replace(/[\[|\]]/g, '')
+    str = `[${str}]`
+    return JSON.parse(str)
+}
+
+//递归
+function flatter(arr) {
+	let newArr = []
+	arr.forEach(item => {
+		if (Array.isArray(item)) {
+			// newArr.push(...flatter(item))
+			newArr = newArr.concat(flatter(item))
+		}
+		else {
+			newArr.push(item)
+		}
+	})
+	return newArr
+}
+```
+
+
+
 ## 对象
+
 ### 原型
 
 - 原型是JS用以实现继承等面向对象特性的基础（原型类比父类）,ES6的`calss`只是原型机制的语法糖。
@@ -95,7 +143,7 @@ typeof function() {} === 'function'
 
   - 创建新的空对象
   - 设置原型，将该对象内置属性[[Prototype]]指向构造函数原型对象
-  - 让函数的`this`指向该对象
+  - 让构造函数的`this`指向该对象
   - 如果构造函数返回一个非基本类型的值，则返回这个值，否则返回上面创建的对象
 
 - `new`模拟
@@ -227,6 +275,19 @@ typeof function() {} === 'function'
 
   - 解决了组合继承两次调用父类构造函数的问题，是除了ES6 `extends`继承外的最优方法。
 
+### class（ES6）
+
+- class是ES6引入的用于定义类的关键字，它是一个语法糖，其背后原理仍然是原型和构造函数。它能帮助我们更好地组织代码。
+- 使用class关键字可以定义一个类，类的**数据类型就是函数**，类是一种特殊函数，只能通过`new`调用，类中的`constructor()`方法是其默认方法
+- 类受块作用域的限制，默认情况下，类定义中的代码都在严格模式下执行。
+- **类的语法**可以方便定义应该存在于**实例上的**成员、应该存在于**原型上的**成员，以及应该存在 于**类本身的**成员。
+  - 实例上的：通过`constructor()`方法定义，不会在原型上共享
+  - 原型上的：在类块中定义的方法即原型上的方法
+  - 类本身的：静态类方法使用`static`关键字作为前缀。静态成员中，`this`引用类自身。静态类方法适合作为实例工厂。
+  - 类定义并不显式支持在原型或类上添加**成员数据**，但可以类定义外部手动添加
+- 类的继承
+  - 使用 `extends `关键字，就可以继承任何**拥有[[Construct]]和原型的对象**。
+
 ## 函数
 
 ### This
@@ -238,7 +299,7 @@ typeof function() {} === 'function'
 - apply、call、bind：这三种函数可以显示指定`this`指向
   - apply 方法接收两个参数：一个是 this 绑定的对象，一个是参数数组。
   - call 方法接收的参数，第一个是 this 绑定的对象，后面的其余参数是传入函数执行的参数。也就是说，在使用 call() 方法时，传递给函数的参数必须逐个列举出来。
-  - bind 方法通过传入一个对象，返回一个 this 绑定了传入对象的新函数。这个函数的 this 指向除了使用 new 时会被改变，其他情况下都不会改变。
+  - bind 方法通过传入一个对象，返回一个 this 绑定了传入对象的新函数。这个函数的`this `指向除了使用 `new` 时会被改变，其他情况下都不会改变。
 
 ## AJAX
 
