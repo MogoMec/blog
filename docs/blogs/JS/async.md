@@ -1,7 +1,7 @@
 ---
 title: async/await行为探索
 categories: JavaScript
-tags: 
+tags:
 - Promise 
 - 异步
 - Event Loop

@@ -42,7 +42,7 @@ tags:
     - `If-Modified-Since `（请求头）：客户端发起请求时，若被请求资源响应头部有`Last-Modified `字段，则将其作为`If-Modified-Since `字段发送，服务器根据该字段值判断资源缓存与现存资源是否匹配
   - `Etag / If-None-Match`（高优先级）
     - `Etag`（响应头）：服务器返回的资源的唯一标识（由服务器生成，资源若修改就会生成新的`Etag`）
-    - `If-None-Match`：客户端发起请求时，若被请求资源响应头部有`Etag `字段，则将其作为`If-None-Match `字段发送，服务器根据该字段值判断资源缓存与现存资源是否匹配。
+    - `If-None-Match`（请求头）：客户端发起请求时，若被请求资源响应头部有`Etag `字段，则将其作为`If-None-Match `字段发送，服务器根据该字段值判断资源缓存与现存资源是否匹配。
 
 ### 强制缓存后端实现
 
@@ -220,5 +220,4 @@ ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000') // 指定源
       }
   }
   ```
-
 

@@ -33,7 +33,8 @@ module.exports = {
         "JavaScript_note",
         "browser",
         "FrontEnd_engineering"
-      ]
+      ],
+      "/docs/algorithm/": ["", "jz04", "jz30", "jz31"]
     },
     subSidebar: "auto",
     type: "blog",
@@ -44,6 +45,7 @@ module.exports = {
     nav: [
       { text: "主页", link: "/", icon: "reco-home" },
       { text: "笔记", link: "/docs/note/", icon: "reco-document" },
+      { text: "算法", link: "/docs/algorithm/", icon: "reco-document" },
       {
         text: "GitHub",
         link: "https://github.com/MogoMec",
