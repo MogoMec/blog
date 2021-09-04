@@ -25,7 +25,7 @@ title: 前端工程化
 
 ### CommonJS
 
-CommonJS 是一种模块化规范，服务器端常用方案，Node.js 遵循该规范，不过Node.js 也在逐步用 ES6 Module 替代 CommonJS。该规范以**同步**方式引入模块，在浏览器中模块的加载使用的是**网络请求**，为了避免阻塞，使用**异步加载**更为合适。
+CommonJS 是一种模块化规范，**服务器端**（Node）常用方案，Node.js 遵循该规范，不过Node.js 也在逐步用 ES6 Module 替代 CommonJS。该规范以**同步**方式引入模块，在浏览器中模块的加载使用的是**网络请求**，为了避免阻塞，使用**异步加载**更为合适。
 
 [CommonJS 规范](http://javascript.ruanyifeng.com/nodejs/module.html)
 
@@ -59,7 +59,7 @@ CommonJS 是一种模块化规范，服务器端常用方案，Node.js 遵循该
     var firstName = "Michael";
     var lastName = "Jackson";
     var year = 1958;
-
+  
     export { firstName, lastName, year };
     ```
 
@@ -70,7 +70,7 @@ CommonJS 是一种模块化规范，服务器端常用方案，Node.js 遵循该
   - ```javascript
     // main.js
     import { firstName, lastName, year } from "./profile.js";
-
+  
     function setName(element) {
       element.textContent = firstName + " " + lastName;
     }
@@ -80,6 +80,12 @@ CommonJS 是一种模块化规范，服务器端常用方案，Node.js 遵循该
 
   - ES6 的模块自动采用严格模式
   - 动态绑定，无缓存，拿到的是实时值
+
+### 模块化方案差异
+
+- CommonJS模块输出的是一个值的拷贝（缓存），ES6 模块输出的是值的引用（动态绑定）；
+- CommonJS模块是运行时加载，ES6 模块是编译时输出接口（Webpack中的 `tree shaking` 和 `scope hoisting` 实际上就是依赖ES6模块化）。
+- [CommonJS和ES6模块的区别 - 掘金 (juejin.cn)](https://juejin.cn/post/6844904067651600391)
 
 ## Webpack
 

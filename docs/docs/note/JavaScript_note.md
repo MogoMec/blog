@@ -103,7 +103,29 @@ function flatter(arr) {
 }
 ```
 
+### 类数组与数组
 
+- 类数组对象：即任何**可迭代**的结构，或者有一个 `length` 属性 和**可索引元素**的结构。
+
+- 典型类数组对象：字符串、`arguments`对象（包含函数调用时传入的所有参数）
+
+- 区别：
+
+  - 数组对象类型为`Array`，遍历数组可以用`for...in..`和`for`循环
+  - 类数组对象类型为`Object`，遍历类数组只能用`for`循环
+
+- 转化（类数组->数组）：
+
+  ```js
+  //arguments对象
+  Array.prototype.slice.call(arguments)
+  //通用
+  Array.from(arrayLike)
+  //将任意的元素组成数组，不是类数组
+  Array.of(element0[, element1[, ...[, elementN]]])
+  //扩展运算符
+  arr1 = [...arr];
+  ```
 
 ## 对象
 
@@ -288,18 +310,189 @@ function flatter(arr) {
 - 类的继承
   - 使用 `extends `关键字，就可以继承任何**拥有[[Construct]]和原型的对象**。
 
+### 深拷贝与浅拷贝
+
+- 浅拷贝：去除原型链，只为对象的第一层级创建了一个新对象
+
+  - for…in…遍历（需要注意使用`hasOwnProperty(key)`排除原型链上的属性）
+
+    ```js
+    function clone(obj) {
+        var cloneObj = {}
+        // for in 遍历，会遍历原型链里面的属性，所以需要排除原型链
+        for(var key in obj) {
+            if(obj.hasOwnProperty(key)) {
+                cloneObj[key] = obj[key]
+            }
+        }
+        return cloneObj
+    }
+    ```
+
+  - `Object.keys()`
+
+    ```js
+    function clone(obj) {
+        var cloneObj = {}
+        // Object.keys()不会遍历到原型链中的属性
+        for(var key of Object.keys(obj)) {
+            cloneObj[key] = obj[key]
+        }
+        return cloneObj
+    }
+    ```
+
+  - `Object.entries()`
+
+    ```js
+    function clone(obj) {
+        var cloneObj = {}
+        for(var [key, value] of Object.entries(obj)) {
+            cloneObj[key] = value
+        }
+        return cloneObj
+    }
+    ```
+
+  - `Object.assign(target,...source)`
+
+    ```js
+    function clone(obj) {
+        return Object.assign(obj, {})
+    }
+    ```
+
+- 深拷贝
+
+  - `JSON.stringfy()` 与 `JSON.parse()`
+
+    ```js
+    function deepClone(obj) {
+        return JSON.parse(JSON.stringify(obj))
+    }
+    ```
+    - 存在问题：
+      - 遇到`function`，`undefined`，`Symbol`，`Date`对象时会自动忽略，遇到正则时会返回空对象。这是由于JSON格式规定的限制。
+      - 无法拷贝原型链
+
+  - 递归
+
+    ```js
+    function deepClone(source) {
+        let target = null
+        if (typeof source === 'object' && source !== null) {
+            target = Array.isArray(source) ? [] : {}
+            for (let [key, value] of Object.entries(source)) {
+                target[key] = deepClone(value)
+            }
+        } else {
+            target = source
+        }
+        return target
+    }
+    ```
+
+  - 第三方库lodash
+
 ## 函数
 
 ### This
 
-- this 是**执行上下文**中的一个属性，它指向最后一次调用这个方法的对象。
-- 全局函数：一个函数不是某个对象的属性时，`this`指向全局对象
-- 方法调用：`this`指向调用的这个方法的对象
-- 构造函数调用：`new`调用构造函数，`this`指向`new`新建出来的对象
-- apply、call、bind：这三种函数可以显示指定`this`指向
-  - apply 方法接收两个参数：一个是 this 绑定的对象，一个是参数数组。
-  - call 方法接收的参数，第一个是 this 绑定的对象，后面的其余参数是传入函数执行的参数。也就是说，在使用 call() 方法时，传递给函数的参数必须逐个列举出来。
-  - bind 方法通过传入一个对象，返回一个 this 绑定了传入对象的新函数。这个函数的`this `指向除了使用 `new` 时会被改变，其他情况下都不会改变。
+- `this` 是**执行上下文**中的一个属性，是函数内部的特殊对象，它指向最后一次调用这个方法的对象。不同情况下的`this`指向
+
+  - 全局函数：一个函数不是某个对象的属性时，`this`指向全局对象，严格模式下为undefined
+  - 方法调用：`this`指向调用的这个方法的对象
+  - 构造函数调用：`new`调用构造函数，`this`指向`new`新建出来的对象
+- apply、call、bind：这三种函数可以显示指定函数的`this`指向，无法改变箭头函数的`this`
+  - apply 方法接收两个参数：一个是` this `绑定的对象，一个是**参数数组**。用于**参数较多**的时候，可以将参数整理为数组再传入。
+  
+    ```js
+    func.apply(thisArg, [argsArray])
+    ```
+  
+  - call 方法接收的参数，第一个是 this 绑定的对象，后面的其余参数是传入函数执行的参数，即**参数列表**。也就是说，在使用 call() 方法时，传递给函数的参数必须**逐个列举出来**。参数不多的时候可以灵活使用。
+  
+    ```js
+    func.call(thisArg, arg1, arg2, ...)
+    ```
+  
+  - bind 方法通过传入一个对象，bind**不会立即调用**，**返回**一个 this 绑定了传入对象的**新函数**。这个函数的`this `指向除了使用 `new` 时会被改变，其他情况下都不会改变。场景：生成一个新的函数长期绑定某个函数给某个对象使用。
+  
+    ```js
+    func.bind(thisArg[, arg1[, arg2[, ...]]])
+    ```
+  
+  - 这三个方法不传参则将`this`绑定在全局对象上
+
+### 箭头函数
+
+- `this`指向：箭头函数不创建自己的`this`，而是从作用域的上一层继承`this`，且该`this`指向固定（静态继承固定）
+
+  ```js
+  var id = 'GLOBAL';
+  var obj = {
+    id: 'OBJ',
+    a: function(){
+      console.log(this.id);
+    },
+    b: () => {
+      console.log(this.id);
+    }
+  };
+  
+  obj.a();    // 'OBJ'
+  obj.b();    // 'GLOBAL'，对象定义时的执行环节仍然为全局环境
+  ```
+
+- 不能作为构造函数使用，它没有自己可变的`this`
+
+- 没有自己的`arguments`对象
+
+- 使用场景：简化回调函数（如高阶函数需要的回调函数）
+
+- 小坑
+
+  - 箭头函数返回{}对象需要用`()`包裹，不然{}会被识别为函数体
+
+    ```js
+    // 用小括号包裹要返回的对象，不报错
+    let getTempItem = id => ({ id: id, name: "Temp" });
+    
+    // 但绝不能这样写，会报错。
+    // 因为对象的大括号会被解释为函数体的大括号
+    let getTempItem = id => { id: id, name: "Temp" };
+    ```
+
+### 防抖与节流
+
+- 防抖：在事件被触发n秒后再执行回调，如果在这n秒内又被触发，则重新计时，所以有可能一直不能成功执行。
+
+  ```js
+  function debounce(fn, delay) {
+      let timer = null
+      return function(){
+          if(timer) {
+              clearTimeout(timer)
+          }
+          timer = setTimeout(fn, delay)
+      }
+  }
+  ```
+
+- 节流：一段时间内，无论触发多少次，只执行一次回调函数。（定时打开的阀门）
+
+  ```js
+  function throttle(fn, delay) {
+      let timer = null;
+      return function() {
+              timer && clearTimeout(timer)
+              timer = setTimeout(() => {
+                  fn.call(this)
+              }, delay)
+  }
+  ```
+
+  
 
 ## 正则表达式
 
@@ -485,4 +678,9 @@ function flatter(arr) {
       })
   ```
 
-p56
+## REF
+
+[JavaScript 常见知识总结_技术交流_牛客网 (nowcoder.com)](https://www.nowcoder.com/discuss/622767?channel=-1&source_id=profile_follow_post_nctrack)
+
+[JavaScript | Akara的前端笔记 (messiahhh.github.io)](https://messiahhh.github.io/blog/frontend/javascript.html#浅拷贝)
+
