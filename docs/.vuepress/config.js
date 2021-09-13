@@ -31,6 +31,7 @@ module.exports = {
         "write_in_front",
         "",
         "JavaScript_note",
+        "computer_network",
         "browser",
         "FrontEnd_engineering"
       ],

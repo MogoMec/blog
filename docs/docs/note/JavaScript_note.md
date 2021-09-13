@@ -371,6 +371,7 @@ function flatter(arr) {
         return JSON.parse(JSON.stringify(obj))
     }
     ```
+
     - 存在问题：
       - 遇到`function`，`undefined`，`Symbol`，`Date`对象时会自动忽略，遇到正则时会返回空对象。这是由于JSON格式规定的限制。
       - 无法拷贝原型链
@@ -465,19 +466,28 @@ function flatter(arr) {
 
 ### 防抖与节流
 
-- 防抖：在事件被触发n秒后再执行回调，如果在这n秒内又被触发，则重新计时，所以有可能一直不能成功执行。
+[函数防抖与函数节流 - 知乎 (zhihu.com)——司徒正美](https://zhuanlan.zhihu.com/p/38313717)
+
+[JavaScript | Akara的前端笔记 (messiahhh.github.io)](https://messiahhh.github.io/blog/frontend/javascript.html#函数防抖)
+
+- 防抖：在事件被触发n秒后再执行回调，如果在这n秒内又被触发，则重新计时，所以有可能一直不能成功执行。重点在于计时器的清除（预定回调的取消）
 
   ```js
   function debounce(fn, delay) {
-      let timer = null
-      return function(){
-          if(timer) {
-              clearTimeout(timer)
-          }
-          timer = setTimeout(fn, delay)
-      }
+      let timer = null;
+      return function(...args) {
+          timer && clearTimeout(timer);//短路运算，timer不为null（即在n秒内又触发了）就清除计时器，这次回调就不触发
+          //设定下一个计时任务
+          timer = setTimeout(() => {
+              fn.apply(this,args);//取到的是debounce执行作用域的this
+          }, delay);
+      };
   }
   ```
+
+  - 场景：连续触发只在最后一次执行
+    - 窗口大小resize
+    - 搜索框输入搜索，只需在用户最后一次输入完再发送请求
 
 - 节流：一段时间内，无论触发多少次，只执行一次回调函数。（定时打开的阀门）
 
@@ -485,14 +495,18 @@ function flatter(arr) {
   function throttle(fn, delay) {
       let timer = null;
       return function() {
-              timer && clearTimeout(timer)
-              timer = setTimeout(() => {
-                  fn.call(this)
-              }, delay)
+          if(timer) return false
+          timer = setTimeout(() => {
+              fn()
+              timer = null
+          }, delay)
+      }
   }
   ```
 
-  
+## 作用域链
+
+
 
 ## 正则表达式
 
@@ -590,7 +604,71 @@ function flatter(arr) {
     }
     ```
   
-  - 
+
+## Proxy
+
+- [Proxy - ECMAScript 6入门 (ruanyifeng.com)](https://es6.ruanyifeng.com/#docs/proxy)
+
+- Proxy（代理）可以理解为在目标对象之前架设一层拦截，外界对该对象的读写都需要经过这层拦截（类比中间件、axios拦截器），通过该机制，对对读写操作进行过滤与改写。
+
+- 应用：Vue3数据劫持、数据校验
+
+- 代理对象例子
+
+  ```js
+  //假定Person对象有一个age属性，该属性应该是一个不大于 200 的整数
+  //创建handler对象，实现拦截具体逻辑
+  let validator = {
+    //set拦截对象属性的设置，get拦截对象属性的读取
+    set: function(obj, prop, value) {
+      if (prop === 'age') {
+        if (!Number.isInteger(value)) {
+          throw new TypeError('The age is not an integer');
+        }
+        if (value > 200) {
+          throw new RangeError('The age seems invalid');
+        }
+      }
+      // 对于满足条件的 age 属性以及其他属性，直接保存
+      obj[prop] = value;
+      return true;
+    }
+  };
+  //创建Proxy实例
+  let person = new Proxy({}, validator);
+  
+  person.age = 100;
+  
+  person.age // 100
+  person.age = 'young' // 报错
+  person.age = 300 // 报错
+  ```
+
+- 代理函数
+
+  ```js
+  handler = {
+      get: function (target, propKey, receiver) {
+          return target[propKey]
+      },
+  	// apply拦截Proxy实例作为函数调用的操作，包括call、apply调用
+      apply: function (target, myThis, args) {
+          console.log(target, myThis, args)
+          target.apply(myThis, args)
+      },
+  	//construct拦截Proxy实例作为构造函数调用的操作
+      construct(target, args) {
+          return new target(...args)
+      }
+  }
+  
+  let proxy = new Proxy(function (a, b) {
+      this.name = a
+      this.age = b
+  }, handler)
+  ```
+
+  
 
 ## AJAX
 
@@ -677,6 +755,14 @@ function flatter(arr) {
           console.log(data)
       })
   ```
+
+## DOM
+
+### 事件委托
+
+- 当有很多子元素需要绑定相同的事件的时候，会造成很大的内存消耗，可以用事件委托，即利用事件冒泡将事件绑定到父元素上
+- 新增的子元素也能绑定事件
+- 缺点：对于不冒泡的事件不支持（blur，focus，mouseleave，mouseenter，load，scroll，resize）（焦点事件，鼠标移动事件）
 
 ## REF
 

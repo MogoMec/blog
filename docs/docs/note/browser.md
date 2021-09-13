@@ -172,28 +172,47 @@ ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000') // 指定源
 
 - `h5`新增api[`window.postMessage`](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/postMessage)，跨文档通信，实现多窗口数据通信，简单直接。
 
-## 浏览器存储
+## 浏览器存储&前端鉴权
 
+### LocalStorage
 
+- 持久化的本地存储，除非主动删除否则数据一直存在。一般最大存储量在5MB。
 
-## 用户身份认证
+- ```js
+  localStorage.setItem('my_key', 'my_value')
+  localStorage.getItem('my_key')
+  localStorage.removeItem('my_key')
+  localStorage.clear()
+  ```
 
-### cookie
+### SessionStorage
 
-- 概述：服务器提供的一种用于维护会话状态信息的**数据**，通过服务器发送到浏览器，浏览器**保存在本地**，当下一次有同源的请求时，将保存的 cookie 值添加到请求头部，发送给服务端。这可以用来实现记录用户登录状态等功能。
+会话级的本地存储，页面被关闭，数据就会清除，大小限制一般为5MB。
 
-- 服务器一般使用`Set-Cookie` 的响应头部来配置 cookie 信息，cookie存放的数据不能大于4Kb。
+### Cookie-鉴权基石
+
+[前端鉴权必须了解的 5 个兄弟：cookie、session、token、jwt、单点登录 ](https://mp.weixin.qq.com/s?__biz=MzUxODc0ODQ1NA==&mid=2247490028&idx=1&sn=26ac243ad0923dac22e860216ffdfcdd&chksm=f98579a5cef2f0b34d18c1fdefae98b0c9dd06d4aaaaa94c356dd34ab387601c83a23d8b8cb5&mpshare=1&scene=23&srcid=0913aESwBLg0511tAIRgFJvA&sharer_sharetime=1631507442661&sharer_shareid=69d300a0e9a6766d9dcf9aa183cf777d#rd)
+
+- 概述：服务器提供的一种用于维护会话状态信息的**标记数据**，通过服务器发送到浏览器，浏览器**保存在本地**，当下一次有同源的请求时，将保存的 cookie 值添加到请求头部，发送给服务端。这可以用来实现记录用户登录状态等功能。（可以做到前端无感）
+
+- 服务器一般使用`Set-Cookie` 的响应头部来配置 cookie 信息，cookie存放的数据不能大于4KB。
 
 - cookie属性
 
-  - `expires`：cookie的过期时间
+  - `expires`：cookie的过期时间，在http1.1中由`max-age`代替
   - `domain`：只能访问该域名时才会带上cookie
   - `path`：表明只有访问该路径时才会带上cookie，与`domain`配合使用
   - `httpOnly`：为`true`时，浏览器不能通过代码读取cookie，即不能被浏览器上的js脚本访问
   - `secure`: 为`true`时，只有发送HTTPS请求时才会带上cookie
   - `SameSite`：用于防止CSRF攻击，默认为`lax`，不发送第三方 Cookie，但是导航到目标网址的 Get 请求除外。详参：[Cookie 的 SameSite 属性](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
 
-- 简易cookie操作封装
+- Cookie与Storage对比
+
+  - 存储大小限制：Storage5MB，cookie4KB
+  - Cookie可以设置过期时间
+  - Cookie一般由后端操作，前端无感，主要用于鉴权标记
+
+- 简易cookie操作封装（前端操作）
 
   ```js
   const cookieUtil = {
@@ -220,4 +239,28 @@ ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000') // 指定源
       }
   }
   ```
+
+### Session-会话状态管理方案
+
+- 使用`Session`时一般要搭配`Cookie`，在**服务端存储**维护`Seesion`数据（比如存储在redis数据库），而`Cookie`中只存储一个`Session_id`这样的键（标记）。
+- Session和Cookie搭配使用鉴权的大致流程
+  - 浏览器发出登录请求，服务端比对成功后，创建Session对象。将对应的Session_id通过Set-Cookie的方式发送给浏览器
+  - 浏览器根据响应头种下`Cookie`
+  - 在登录状态下请求个人数据，浏览器发起请求时自动携带`Cookie`信息，其中包含`Session_id`
+  - 服务端在维护的Session数据库中可以找到该id，就能返回对应的个人数据
+- 缺陷
+  - Cookie：针对跨域场景无力
+  - Session：分布式（服务器集群）场景下必须共享会话数据，后端维护较为麻烦
+
+### JWT-成熟的token编码方案
+
+- `token`方案：把会话数据都存放在客户端，解决后端维护Session的问题
+- `token`是由服务器生成的包含用户数据信息的字符串，JWT是用于生成安全可靠的token的一种规范。
+- JWT下的token字符串由三部分组成，各部分之间以`.`来分割。
+  - Header：一个用于声明类型与加密算法的JSON对象经过`Base64`编码生成
+  - PayLoad：会话数据经过`Base64`编码后生成，这一部分信息就是原来Session的内容
+  - Signature：对前两部分内容的加密签名，用于防止假冒。服务端通过前两部分的值（原信息）、签名算法、服务端私有密钥生成。
+- JWT一般存储在`localstorage`或者`cookie`中（必定在客户端），在这之后发请求时会将`token`提取出来，或是放在`Authorization: Bearer ${token}`请求头部中，又或是直接作为请求的参数字段发送给后端，以供后端解析鉴权。
+
+
 
