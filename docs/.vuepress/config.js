@@ -29,6 +29,7 @@ module.exports = {
     sidebar: {
       "/docs/note/": [
         "write_in_front",
+        "css_note",
         "",
         "JavaScript_note",
         "computer_network",
