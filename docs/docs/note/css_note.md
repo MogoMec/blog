@@ -79,8 +79,9 @@ tags:
   - 嵌套代码，通过嵌套来反映元素层级
   - 支持变量，统一管理
   - 允许对代码片段进行`mixin`和`extend`
-- 后处理器：如postCss，通常是在完成的样式表中根据`css`规范处理`css`，让其更加有效。目前最常做的是给`css`属性添加浏览器私有前缀，实现跨浏览器兼容性的问题。
+- 后处理器：典型是PostCss，通常是在完成的样式表中根据`css`规范处理`css`，让其更加有效。目前最常做的是给`css`属性添加浏览器私有前缀，实现跨浏览器兼容性的问题。
   - 后处理器处理的就是css代码，其工作类似于JS中的Babel，它可以编译尚未被浏览器广泛支持的先进的 CSS 语法，还可以自动为一些需要额外兼容的语法增加前缀。
+  - vue中组件的局部样式scoped就是提过PostCss实现的：PostCss给元素添加动态属性`data-v-xxxxx`，并添加一个对应的属性选择器
 
 ## 定位与浮动
 
@@ -89,7 +90,6 @@ tags:
 - relative（相对定位）：相对于其原来的位置进行定位。元素的位置通过left、top、right、bottom属性进行规定。不脱标。
 - absolute（绝对定位）：相对于static定位以外的一个父元素进行定位。元素的位置通过left、top、right、bottom属性进行规定。脱标。
 - fixed（固定定位）：指定元素相对于屏幕视⼝（viewport）的位置来指定元素位置。元素的位置在屏幕滚动时不会改变，⽐如回到顶部的按钮⼀般都是⽤此定位⽅式。
-- 
 
 ## 页面布局
 
@@ -410,6 +410,55 @@ tags:
     </body>
     </html>
     ```
+
+## 场景应用
+
+### 实现一个三角形
+
+长宽为0，利用边框：边框方向控制三角形的方向，边框宽度控制三角形角度
+
+```css
+div {    width: 0;    height: 0;    border-top: 50px solid red;    border-right: 50px solid transparent;    border-left: 50px solid transparent;}
+
+```
+
+### 实现一个扇形
+
+```css
+div{
+    border: 100px solid transparent;
+    width: 0;
+    heigt: 0;
+    border-radius: 100px;
+    border-top-color: red;
+}
+```
+
+### 宽高自适应的正方形
+
+- 利用vw
+
+  ```css
+  .square {
+    width: 10%;
+    height: 10vw;
+    background: tomato;
+  }
+  ```
+
+### 画一条0.5px的线
+
+- 利用`transform: scale()`缩放
+
+  ```css
+  transform: scaleY(0.5);
+  ```
+
+- 利用meta viewport的方式设置初始缩放initial-sacle（针对移动端）
+
+  ```html
+  <meta name="viewport" content="width=device-width, initial-scale=0.5, minimum-scale=0.5, maximum-scale=0.5"/>
+  ```
 
   
 

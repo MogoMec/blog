@@ -9,12 +9,13 @@ date: 2020-05-29
 - 简化 DOM 操作
 - 响应式数据驱动
 - 双向数据绑定
+- 渐进式：分层设计，可以根据需求选择不同的层级（路由机制、状态管理等）
 
 ## MVVM（狭义）
 
 - Model：数据源
 - View：页面所渲染的 DOM 的结构
-- ViewModel：vue 实例，是 MVVM 的核心，负责监听事件、数据绑定
+- ViewModel：vue 实例，是 MVVM 的核心，负责监听事件、数据绑定，实现了View和Model的自动同步更新（即双向绑定）
 
 ### 第一个 Vue
 
@@ -58,9 +59,9 @@ date: 2020-05-29
 
 - v-html：设置元素的 innerHTML
 
-- 写入的 html 结构会被解析为标签
+  - 写入的 html 结构会被解析为标签
 
-- v-on：为元素绑定事件
+- v-on：为元素绑定事件，简写`@`
 
   - ```vue
     v-on:事件 = ’方法‘ @事件 = '方法'
@@ -84,16 +85,12 @@ date: 2020-05-29
     v-show:逻辑表达式
     ```
 
-  - 逻辑表达式可以使用 Vue 实例中的属性
-
   - 原理：动态添加和删除`display:none`属性
-
-  - 数据改变后对应元素状态会实时更新
 
 - v-if：根据表达值的真假,切换元素的显示和隐藏（操作 dom 元素）
 
   - 直接操作 DOM 性能消耗较大
-  - 频繁切换使用 v-show
+  - 频繁或大数量切换使用 v-show
 
 - v-bind：用于设置元素的属性，通用性强
 
@@ -211,36 +208,18 @@ date: 2020-05-29
 
 ## 计算属性
 
-- computed
-- 尽量以属性方式给其中函数取名
-- 计算属性中的函数调用时不需要加小括号
-- **计算属性是基于它们的响应式依赖进行缓存的**。适合例如需要遍历数组的操作。
-
-## 过滤器（vue2）
-
-- ```javascript
-  filters: {
-    capitalize: function (value) {
-      if (!value) return ''
-      value = value.toString()
-      return value.charAt(0).toUpperCase() + value.slice(1)
-    }
-  }
-  ```
-
-- ```html
-  <p>{{message|capitalize}}</p>
-  ```
-
-- 本质是一个函数
-
-- 常用于格式化文本
-
-- 使用管道符`|`调用
+- `computed`：依赖已有的变量来计算一个目标变量（多对一）。
+- **计算属性是基于它们的响应式依赖进行缓存的**。依赖值不变的情况下会直接读取缓存值进行复用。适合例如需要遍历数组的操作。
+- 不能进行异步操作。
+- 尽量以属性方式给其中函数取名。
 
 ## 侦听器
 
-- 描述：watch 侦听器允许开发者监视数据的变化，从而针对数据的变化做特定的操作。
+- 描述：watch 侦听器允许开发者监视某个数据的变化，从而针对数据的变化做特定的操作（一对多）。
+
+- 可以进行异步操作
+
+- 监听引用数据类型时可以使用`deep`进行深度监听
 
 - ```javascript
   const vm = new Vue({
@@ -258,76 +237,30 @@ date: 2020-05-29
 ## Vue 的生命周期
 
 - Vue 组件生命周期即它从创建、运行到销毁的**时间段**
-- 钩子函数[vue 中的钩子函数（一） - 简书 (jianshu.com)](https://www.jianshu.com/p/1b629947480c)
-  - ![lifecycle.png (1200×3039) (vuejs.org)](https://cn.vuejs.org/images/lifecycle.png)
+
+  ![lifecycle.png (1200×3039) (vuejs.org)](https://cn.vuejs.org/images/lifecycle.png)
+
+- ![image-20210921144225654](.\image-20210921144225654-16322065524811.png)
+
 - created()：此时组件的 props、data、methods 已经可用，但是**模板结构尚未生成**，一般在此时发起 AJAX 请求(methods)，进行数据获取。
--
 
-## 虚拟 DOM
+- 父子组件生命周期顺序
 
-- 不希望标签被复用可以使用标签的 key 属性
+  父 before Create->created-> before Mount->子 beforeCreate>子created->子beforeMount-->子 mounted->父mounted
 
-## 组件化
+## 组件
 
-### 基础
+### 组件传值
 
-- 描述：组件是可复用的 Vue 实例，组件时 Vue 中代码复用和抽象的主要形式
+#### 父子组件的通信
 
-- 官网示例
-
-  ```vue
-  Vue.component('button-counter', { data: function () { return { count: 0 } },
-  template: '<button
-    v-on:click="count++"
-  >You clicked me {{ count }} times.</button
-  >' })
-  ```
-
-* 组件的 data 属性必须是一个函数，以此保证每个实例可以维护一份被返回对象的独立拷贝。
-
-* 组件以组件**树**的形式进行组织
-
-### 使用（props 等）
-
-- 创建组件构造器： `Vue.extend(组件构造器对象)`
-
-  - Vue 组件的原型指向 Vue
-  - 分离`template`属性：使用 template 标签进行模板定义，定义 id 属性，在定义组件对象时使用#id
-  - `data`属性：组件的 data 属性必须是一个**函数**，函数返回值是一个组件所需数据的**对象**，以此保证每个实例可以维护一份被返回对象的独立拷贝，即组件自己维护自己独立的数据
-  - **每个组件必须只有一个根元素**
-
-- 注册组件：`Vue.component(组件名,组件构造器对象)`，Vue 中的`components`属性
-  - 组件命名推荐短横线命名
-  - 全局注册
-    - 使用`Vue.component`注册的是全局组件，全局组件可以在多个 Vue 实例下使用
-    - 工程化时在 main.js（即打包入口）导入并注册全局组件
-  - 局部注册
-    - 在 Vue 实例中的`components`属性下可以注册为局部组件
-  - 注册组件的语法糖（实际使用）：不直接调用 `Vue.extend(组件构造器对象)`，将组件对象直接写入`Vue.component(组件名,组件构造器对象)`或者`components`属性
-- 使用组件
-
-  - 在 html 结构中把组件名作为标签名使用即可
-  - 在组件中使用 v-model 进行双向绑定时变量应该设为 data 或计算属性
-
-- 父组件和子组件（树结构）
-  - 在父组件的构造对象中把子组件写入`components`属性进行注册
-  - 完成注册的子组件可以使用在父组件的模板方法中
-  - 可以办使用这些组件的 Vue 实例看做根组件
-- 父子组件的通信
-
-  - 在开发中，可能会由上层组件进行网络请求获得数据，需要使用子组件进行展示，就需要父子组件通信
-  - **Props**（父传子）：在组件对象中`props`属性（数组、对象）中注册属性（声明需要从父级接受的数据），该属性由外部使用组件时作为标签自定义属性（一般用 v-bind 动态传入）传入，可以在定义组件模板时使用该属性
-    - [Prop — Vue.js (vuejs.org)](https://cn.vuejs.org/v2/guide/components-props.html)
-    - props 是组件的**自定义属性**，在封装组件时，合理使用可以大幅提高组件的复用性
-    - 定义`props`属性时可以使用数组也可以使用**对象**，使用对象时可以针对传入数据进行修饰，如限定数据类型、设置默认值（default 属性）、设定是否必传
-  - 标签自定义属性值不支持驼峰命名，使用-代替驼峰
-
-  - **监听子组件事件**（子传父）：子组件调用`$emit()`发送事件，父组件使用`v-on`监听事件，就像监听原生 DOM 事件一样。
-    - `$emit()`：第一个参数传入事件名，第二个参数传入附加信息
-
-- 兄弟组件的数据共享
-  - EventBus
-  - Vuex
+- 在开发中，可能会由上层组件进行网络请求获得数据，需要使用子组件进行展示，就需要父子组件通信
+- **Props**（父传子）：在组件对象中`props`属性（数组、对象）中注册属性（**声明**需要从父级接受的数据），该属性由外部使用组件时作为标签自定义属性（一般用 v-bind 动态传入）传入，可以在定义组件模板时使用该属性
+  - [Prop — Vue.js (vuejs.org)](https://cn.vuejs.org/v2/guide/components-props.html)
+  - props 是组件的**自定义属性**，在封装组件时，合理使用可以大幅提高组件的复用性
+  - 定义`props`属性时可以使用数组也可以使用**对象**，使用对象时可以针对传入数据进行修饰，如限定数据类型、设置默认值（default 属性）、设定是否必传
+- **监听子组件事件**（子传父）：子组件调用`$emit()`发送事件，父组件使用`v-on`监听事件，就像监听原生 DOM 事件一样。
+  - `$emit()`：第一个参数传入事件名，第二个参数传入附加信息
 - 父子组件的访问（通过对象）
 
   - 父访子：
@@ -335,7 +268,14 @@ date: 2020-05-29
     - `$refs`：返回一个对象，包括**注册过 ref 属性**的所有 DOM 元素和组件实例，通过 ref 值进行定位
   - 子访父：一般不使用
     - `$parent`：返回父实例
-    - `$parent`：返回当前组件树的根实例
+    - `$root`：返回当前组件树的根实例
+
+#### 兄弟组件的数据共享
+
+- EventBus事件总线，跨组件触发事件，进而传递数据
+- Vuex状态管理
+- `$refs`组件实例获取
+- 使用浏览器本地存储，如`localstorage`
 
 ### slot 插槽
 
@@ -380,25 +320,11 @@ date: 2020-05-29
     - `include:"组件名称"`：指定缓存组件的范围
     - `exclude:"组件名称"`：指定不需要被缓存的组件，与 include 属性互斥，不要同时使用
 
-### .vue
-
-- template：组件的模板（HTML）解构
-- script：组件的交互（JS）行为
-- style：组件的样式（CSS）
-  - 设置`lang`属性可以启用 css 预处理语言，eg.`<style lang="less">`
-  - 样式应用域：
-    - `<style scoped>`，添加 scoped 属性解决样式冲突，使得单个组件文件的样式只应用于自己（不包含子组件），底层实现是通过给标签增加唯一属性，再使用属性选择器进行复合选择
-    - `/deep/`：使用 deep 可以在父组件局部作用域的情况下修改子组件样式
-- 组件使用
-  - template 中使用标签使用组件
-  - import 导入需要的组件
-  - 在 components 节点下
-
 ## 全局 API
 
 ### nextTick
 
-- 将回调推迟到下一个 DOM 更新周期之后执行，用于在代码中获取更新后的 DOM 的值
+- 将回调推迟到下一个 DOM 更新周期之后执行，用于在代码中获取更新后的 DOM 的值，vue是异步更新的
 
 - `this.$nextTick`
 
@@ -419,7 +345,7 @@ date: 2020-05-29
               onClick() {
                   this.count++
                   this.count++
-
+  
                   new Promise((resolve) => {
                     	resolve(100)
                   }).then(() => {
@@ -457,12 +383,17 @@ date: 2020-05-29
 
 - 描述：路由就是一种映射关系（哈希地址与组件之间）
 
-- 前端路由的工作方式
+- 一般开发SPA（单页面应用），需要引入前端路由系统
 
-  1. 用户点击了页面上的路由链接
-  2. 导致了 URL 地址栏中的 Hash 值发生了变化
-  3. 前端路由监听了到 Hash 地址的变化
-  4. 前端路由把当前 Hash 地址对应的组件渲染都浏览器中
+- 两种路由模式
+
+  - hash
+
+    即地址栏中的#号后的内容，hash内容虽热在URL中，但是不会被包含在HTTP请求中，因此对后端没有影响
+
+  - history
+
+     利用了 HTML5 History Interface 中新增的 `pushState()` 和 `replaceState()` 方法。history模式仍然需要后端配置支持来覆盖所有的合法url。
 
 - vue-router 的安装与配置（路由模块）
 
@@ -471,9 +402,9 @@ date: 2020-05-29
     import VueRouter from "vue-router";
     //安装插件
     Vue.use(VueRouter);
-
+    
     const router = new VueRouter();
-
+    
     export default router;
     ```
 
@@ -546,7 +477,7 @@ date: 2020-05-29
     // 对象
     router.push({ path: "home" });
     // 命名的路由router.push({ name: 'user', params: { userId: '123' }})
-
+    
     // 带查询参数，变成 /register?plan=private
     router.push({ path: "register", query: { plan: "private" } });
     ```
@@ -573,7 +504,7 @@ date: 2020-05-29
 
   - ```js
     const router = new VueRouter({ ... })
-
+    
     router.beforeEach((to, from, next) => {
       // ...
     })
@@ -602,33 +533,6 @@ date: 2020-05-29
 ### 运行流程
 
 - 通过 main.js 把 App.vue 渲染到 index.html 的指定区域中。
-
-## 实际使用
-
-- 安装 vue
-
-  ```shell
-  npm install vue -S
-  ```
-
-- 安装处理 vue 单文件组件的 loader
-
-  ```shell
-  npm install vue-loader vue-template-compiler -D // 处理Vue单文件组件，-D表示开发时依赖
-  ```
-
-* axios 库使用技巧
-
-  - 把 axios 挂载到 Vue 原型（Main.js 中）上并配置请求根路径
-
-    - ```js
-      axios.defaults.baseURL = "https://way.jd.com/he/freeweather";
-      Vue.prototype.axios = axios;
-      ```
-
-    - 缺点：仍然不利于 API 复用
-
-  - 作为模块单独抽离
 
 ## Vuex
 
@@ -663,13 +567,13 @@ date: 2020-05-29
 
   - ```js
     import { mapMutations } from "vuex";
-
+    
     export default {
       // ...
       methods: {
         ...mapMutations([
           "increment", // 将 `this.increment()` 映射为 `this.$store.commit('increment')`
-
+    
           // `mapMutations` 也支持载荷：
           "incrementBy" // 将 `this.incrementBy(amount)` 映射为 `this.$store.commit('incrementBy', amount)`
         ]),
@@ -688,11 +592,16 @@ date: 2020-05-29
 
 - Modules
 
+## 实践优化
+
+- 死数据：一些始终不会改变的数据（校验规则、写死的表格数据），可以不进行响应式处理，将其定义在`data`的return对象之外。
+
 ## 原理
 
 ### 双向数据绑定
 
 - vue的双向数据绑定是依靠**数据劫持**（检测数据变化）和**发布-订阅模式**的结合。
+- 计算属性实现传参：计算属性返回一个函数，该在该函数中定义并使用参数，配合使用计算属性时（）传参，实际上是对传回参数进行了一次调用。
 
 #### 数据劫持
 
@@ -892,11 +801,83 @@ date: 2020-05-29
 #### vue2数据劫持的不足与解决
 
 - 对象属性的添加或删除无法被检测，Vue 不能动态添加**根级别**的响应式属性。但是，可以使用 `Vue.set(object, key, value)` 方法向**嵌套对象**添加响应式属性。
-
 - `Object.defineProperty`不支持数组，因此Vue重写了数组的很多方，使得这些方法也能触发视图更新，都仍然不能检测以下变动:
 
   - 当你利用索引直接设置一个项时，例如：`vm.items[indexOfItem] = newValue`
   - 当你修改数组的长度时，例如：`vm.items.length = newLength`
 
-  
+### diff算法
+
+ [15张图，20分钟吃透Diff算法核心原理，我说的！！！ - 掘金 (juejin.cn)](https://juejin.cn/post/6994959998283907102#heading-8)
+
+- 虚拟DOM：用来表示真实DOM的JS对象，diff算法的基石（比较对象）
+
+- diff算法，顾名思义是一种对比算法，通过对比虚拟DOM，找出更新真实DOM的最小操作（尽可能多地复用）。vue的diff算法是深度优先算法，事件复杂度O(n)
+
+- 具体机制：
+
+  - 同层比较：新旧虚拟DOM对比的时候，Diff算法比较只会在同层级进行, 不会跨层级比较。
+
+  - 使用`sameVnode`方法对比当前同层的虚拟节点是否为同一种类型的标签，是则进行深层比较（`patchVnode`），不是就直接替换成新虚拟DOM。
+
+    ```js
+    function sameVnode(oldVnode, newVnode) {
+      return (
+        oldVnode.key === newVnode.key && // key值是否一样
+        oldVnode.tagName === newVnode.tagName && // 标签名是否一样
+        oldVnode.isComment === newVnode.isComment && // 是否都为注释节点
+        isDef(oldVnode.data) === isDef(newVnode.data) && // 是否都定义了data
+        sameInputType(oldVnode, newVnode) // 当标签为input时，type必须是否相同
+      )
+    }
+    ```
+
+  - `patchVnode`：确定需要进行深层比较
+
+    - 找到对应的`真实DOM`，称为`el`
+    - 判断`newVnode`和`oldVnode`是否指向同一个对象，如果是，那么直接`return`
+    - 如果他们都有**文本节点**并且不相等，那么将`el`的文本节点设置为`newVnode`的文本节点。
+    - 如果`oldVnode`有子节点而`newVnode`没有，则删除`el`的子节点
+    - 如果`oldVnode`没有子节点而`newVnode`有，则将`newVnode`的子节点真实化之后添加到`el`
+    - 如果两者都有子节点，则执行`updateChildren`函数比较子节点，这一步很重要
+
+    ```js
+    function patchVnode(oldVnode, newVnode) {
+      const el = newVnode.el = oldVnode.el // 获取真实DOM对象
+      // 获取新旧虚拟节点的子节点数组
+      const oldCh = oldVnode.children, newCh = newVnode.children
+      // 如果新旧虚拟节点是同一个对象，则终止
+      if (oldVnode === newVnode) return
+      // 如果新旧虚拟节点是文本节点，且文本不一样
+      if (oldVnode.text !== null && newVnode.text !== null && oldVnode.text !== newVnode.text) {
+        // 则直接将真实DOM中文本更新为新虚拟节点的文本
+        api.setTextContent(el, newVnode.text)
+      } else {
+        // 否则
+    
+        if (oldCh && newCh && oldCh !== newCh) {
+          // 新旧虚拟节点都有子节点，且子节点不一样
+    
+          // 对比子节点，并更新
+          updateChildren(el, oldCh, newCh)
+        } else if (newCh) {
+          // 新虚拟节点有子节点，旧虚拟节点没有
+    
+          // 创建新虚拟节点的子节点，并更新到真实DOM上去
+          createEle(newVnode)
+        } else if (oldCh) {
+          // 旧虚拟节点有子节点，新虚拟节点没有
+    
+          //直接删除真实DOM里对应的子节点
+          api.removeChild(el)
+        }
+      }
+    }
+    ```
+
+  - `updateChildren`：比较子节点，首尾指针法进行子节点顺序匹配。
+
+    
+
+
 
