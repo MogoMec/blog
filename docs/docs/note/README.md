@@ -240,7 +240,7 @@ date: 2020-05-29
 
   ![lifecycle.png (1200×3039) (vuejs.org)](https://cn.vuejs.org/images/lifecycle.png)
 
-- ![image-20210921144225654](.\image-20210921144225654-16322065524811.png)
+- ![image-20210921144225654](https://github.com/MogoMec/blog/blob/master/docs/docs/note/image-20210921144225654.png?raw=true)
 
 - created()：此时组件的 props、data、methods 已经可用，但是**模板结构尚未生成**，一般在此时发起 AJAX 请求(methods)，进行数据获取。
 
