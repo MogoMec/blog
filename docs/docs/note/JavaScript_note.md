@@ -49,14 +49,35 @@ typeof function() {} === 'function'
 
 ### 判断相等
 
-- `==`会自动进行类型转换
+- `==`会自动进行类型转换，`NaN`不等于自身
 - `===`不会进行类型转换，`NaN`不等于自身
 - [Object.is()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
   - NaN自身相等
   - +0、-0不相等
 ### 类型转换
 
+#### 隐式转换
 
+- -、*、/：非Number转换为Number
+
+- +（加法特殊性）：
+
+  - 有String，必转String
+  - 有Number，另一边为原始类型，原始转为Number
+  - 有Number，另一边为引用类型，都转为String再拼接
+  - 以上三条规则优先级从高到低
+
+- 逻辑判断
+
+  - 单个变量：只有 `null` `undefined` `''` `NaN` `0` `false` 这几个是 `false`，其他的情况都是 `true`，比如 `{}` , `[]`。但是需要注意`[]==false`，该表达式值为`true`
+
+  - `==`双等号判断：
+
+
+      NaN和其他任何类型比较永远返回false
+
+
+  - 
 
 ## 数组
 
